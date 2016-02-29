@@ -1,11 +1,38 @@
 {
   "name": "btrz-simple-cache",
   "version": "1.0.0",
-  "description": "",
+  "description": "Betterez Simple cache",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test multi='xunit=test-results/xunit.xml spec=-' node_modules/istanbul/lib/cli.js cover node_modules/mocha/bin/_mocha -- --ui bdd -R mocha-multi -t 5000",
+    "test-w": "NODE_ENV=test node_modules/mocha/bin/mocha -w",
+    "publish": "publish"
   },
-  "author": "",
-  "license": "ISC"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Betterez/btrz-simple-cache.git"
+  },
+  "keywords": [
+    "Cache",
+    "Redis"
+  ],
+  "license": "MIT",
+  "author": {
+    "name": "hgarcia",
+    "email": "hernan@dynamicprogrammer.com"
+  },
+  "bugs": {
+    "url": "https://github.com/Betterez/btrz-simple-cache/issues"
+  },
+  "homepage": "https://github.com/Betterez/btrz-simple-cache",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "istanbul": "^0.4.1",
+    "mocha": "latest",
+    "mocha-multi": "latest",
+    "publish": "^0.5.0",
+    "sinon": "latest",
+    "xunit-file": "latest"
+  }
 }
