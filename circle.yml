@@ -1,14 +1,6 @@
 machine:
   node:
-    version: 4.2.2
-dependencies:
-  cache_directories:
-    - mongodb-linux-x86_64-3.0.8
-  pre:
-    - if [[ ! -d mongodb-linux-x86_64-3.0.8 ]]; then wget http://fastdl.mongodb.org/linux/mongodb-linux-x86_64-3.0.8.tgz && tar xvzf mongodb-linux-x86_64-3.0.8.tgz; fi
-    - sudo /etc/init.d/mongodb stop
-    - sudo cp mongodb-linux-x86_64-3.0.8/bin/* /usr/bin
-    - sudo /etc/init.d/mongodb start
+    version: 4.3.0
 deployment:
   npm:
     branch: master
