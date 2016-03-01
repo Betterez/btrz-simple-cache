@@ -3,6 +3,35 @@
 let redis = require("redis"),
   client = null;
 
+function createClient(options) {
+  return new Promise(function (resolve, reject) {
+    let client = redis.createClient(options.port, options.host);
+    client.auth(options.pass, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(client);
+      }
+    });
+  });
+}
+
+class RedisCache {
+
+  constructor(options) {
+    if (!options ||
+      !options.host ||
+      !options.port ||
+      options.pass === undefined) {
+      throw new Error("Please provide connection options with host port and (if needed) password to connect to a Redis server")
+    }
+    this.options = options;
+    this.client = createClient(this.options);
+  }
+}
+
+exports.RedisCache = RedisCache;
+
 exports.create = function (options, logger) {
   let prefix = (options && options.prefix) ? options.prefix : "cache-";
 
