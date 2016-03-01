@@ -16,6 +16,52 @@ function createClient(options) {
   });
 }
 
+function getKey(client, key) {
+  return new Promise(function (resolve, reject) {
+    client.get(key, function (err, result) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(JSON.parse(result));
+      }
+    });
+  });
+}
+
+function delKey(client, key) {
+  return new Promise(function (resolve, reject) {
+    client.del(key, function (err) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+function flushKeys(client, prefix) {
+  return new Promise(function (resolve, reject) {
+    client.keys(`${prefix}*`, function (err, results) {
+      if (err) {
+        reject(err);
+      } else {
+        if (results && results.length > 0) {
+          client.del(results, function (errDel, count) {
+            if (errDel) {
+              reject(errDel);
+            } else {
+              resolve(count);
+            }
+          });
+        } else {
+          resolve(0);
+        }
+      }
+    });
+  });
+}
+
 class RedisCache {
 
   constructor(options) {
@@ -28,112 +74,36 @@ class RedisCache {
     this.options = options;
     this.client = createClient(this.options);
   }
+
+  set(key, value, ttl) {
+    return this.client
+      .then(function (client) {
+        client.set(key, JSON.stringify(value));
+        client.expire(key, ttl);
+        return value;
+      });
+  }
+
+  get(key) {
+    return this.client
+      .then(function (client) {
+        return getKey(client, key);
+      });
+  }
+
+  del(key) {
+    return this.client
+      .then(function (client) {
+        return delKey(client, key);
+      });
+  }
+
+  flush(prefix) {
+    return this.client
+      .then(function (client) {
+        return flushKeys(client, prefix);
+      });
+  }
 }
 
 exports.RedisCache = RedisCache;
-
-exports.create = function (options, logger) {
-  let prefix = (options && options.prefix) ? options.prefix : "cache-";
-
-  function logErr(msg, args) {
-    if (logger && logger.error) {
-      logger.error(msg, args);
-    }
-  }
-
-  function throwErr(err) {
-    if (err) { throw err; }
-  }
-
-  function connect() {
-    if (!client) {
-      client = new redis.createClient(options.port, options.host);
-      client.auth(options.pass, throwErr);
-    }
-  }
-
-  return {
-    close: function () {
-      try {
-        connect();
-        client.quit();
-      } catch (e) {
-        logErr('cache-redis::close', [e]);
-      }
-    },
-    get: function (key, cb) {
-      try {
-        connect();
-        client.get(prefix + key, function (err, result) {
-          cb(err, JSON.parse(result));
-        });
-      } catch (e) {
-        logErr('cache-redis::get', [e, key]);
-        if (cb) {
-          cb(e, null);
-        }
-      }
-    },
-    set: function (key, obj, cb, lifetime) {
-      try {
-        if (arguments.length < 2) {
-          logErr("cache-redis::set - missing arguments ", arguments);
-          return;
-        }
-
-        if (cb && (!isNaN(cb))) {
-          lifetime = cb;
-          cb = null;
-        }
-
-        if (!cb) {
-          cb = function () {}; //No callback
-        }
-
-        connect();
-        client.set(prefix + key, JSON.stringify(obj), cb);
-
-        if (lifetime) {
-          client.expire(prefix + key, lifetime);
-        }
-
-      } catch (e) {
-        logErr('cache-redis::set', [e, arguments]);
-        if (cb) {
-          cb(e, null);
-        }
-      }
-    },
-    flush: function (cb) {
-      try {
-        connect();
-        client.keys(prefix + '*', function (err, result) {
-          if (result && result.length > 0) {
-            client.del(result, cb);
-          } else {
-            cb(null, 0);
-          }
-        });
-      } catch (e) {
-        logErr('cache-redis::remove', [e]);
-        if (cb) {
-          cb(e, null);
-        }
-      }
-    },
-    remove: function (key, cb) {
-      try {
-        connect();
-        client.del(prefix + key, cb);
-      } catch (e) {
-        logErr('cache-redis::remove', [e, key]);
-        if (cb) {
-          cb(e, null);
-        }
-      }
-    },
-    getStatus: function () {
-      return client.connected;
-    }
-  };
-};
