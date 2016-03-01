@@ -28,6 +28,7 @@
   "dependencies": {
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "istanbul": "^0.4.1",
     "mocha": "latest",
     "mocha-multi": "latest",
